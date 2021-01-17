@@ -6,11 +6,10 @@ export type JwtToken = {
     sub: string;
 };
 
-export type Rule<T> = (token: JwtToken) => Promise<RuleResult<T>>;
+export type Rule = (token: JwtToken) => Promise<RuleResult>;
 
-export type RuleResult<T extends {}> = {
+export type RuleResult = {
     passed: boolean;
-    data: T[];
     ruleName: string;
 };
 
@@ -20,11 +19,11 @@ export type Request = {
     };
 };
 
-export const authorize = async <T1 = void, T2 = void, T3 = void, T4 = void>(
+export const authorize = async (
     jwtToken: string,
-    executionRule: Rule<T1 | T2 | T3 | T4>
-): Promise<(T1 | T2 | T3 | T4)[]> => {
-    const token = getToken(jwtToken);
+    executionRule: Rule
+): Promise<void> => {
+    const token = parseToken(jwtToken);
 
     if (!token.iss) {
         throw createError(403, 'invalid token (missing issuer)');
@@ -34,30 +33,24 @@ export const authorize = async <T1 = void, T2 = void, T3 = void, T4 = void>(
     if (!ruleResult.passed) {
         throw createError(403, 'Operation not authorized');
     }
-
-    return ruleResult.data;
 };
 
-export const and = <T extends {} | void>(rules: Rule<T>[]): Rule<T> => async (token: JwtToken) => {
-    let data: T[] = [];
+export const and = (rules: Rule[]): Rule => async (token: JwtToken) => {
     for (const rule of rules) {
         const ruleResult = await rule(token);
         if (!ruleResult.passed) {
             return ruleResult;
         }
-        data = [...data, ...ruleResult.data];
     }
-    return {passed: true, ruleName: 'and', data};
+    return {passed: true, ruleName: 'and'};
 };
 
-export const or = <T extends {} | void>(rules: Rule<T>[]): Rule<T> => async (token: JwtToken) => {
-    let data: T[] = [];
+export const or = (rules: Rule[]): Rule => async (token: JwtToken) => {
     for (const rule of rules) {
         const ruleResult = await rule(token);
-        data = [...data, ...ruleResult.data];
-        if (ruleResult.passed) return {passed: true, ruleName: 'or', data};
+        if (ruleResult.passed) return {passed: true, ruleName: 'or'};
     }
-    return {passed: false, ruleName: 'or', data: []};
+    return {passed: false, ruleName: 'or'};
 };
 
-const getToken = (token: string): JwtToken & {iss: string} => jwtDecoder(token);
+const parseToken = (token: string): JwtToken & {iss: string} => jwtDecoder(token);
