@@ -47,5 +47,16 @@ describe('tests', () => {
                 expect(e.status).toBe(403);
             }
         });
+
+        it('should throw 403 when token in invalid ', async () => {
+            const rule1 = createRule('rule1', false);
+
+            try {
+                await authorize('stam', and([rule1()]));
+                fail();
+            } catch (e) {
+                expect(e.status).toBe(403);
+            }
+        });        
     });    
 });

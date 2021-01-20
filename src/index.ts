@@ -23,15 +23,21 @@ export const authorize = async (
     jwtToken: string,
     executionRule: Rule
 ): Promise<void> => {
-    const token = parseToken(jwtToken);
+    let token: JwtToken;
+    try {
+        token = parseToken(jwtToken);
+    }
+    catch (e) {
+        throw createError(403, 'invalid token: parse failed');
+    }
 
     if (!token.iss) {
-        throw createError(403, 'invalid token (missing issuer)');
+        throw createError(403, 'invalid token: missing issuer');
     }
 
     const ruleResult = await executionRule(token);
     if (!ruleResult.passed) {
-        throw createError(403, 'Operation not authorized');
+        throw createError(403, 'operation not authorized');
     }
 };
 
