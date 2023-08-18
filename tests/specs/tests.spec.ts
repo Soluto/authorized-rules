@@ -1,4 +1,5 @@
 import * as jwt from 'jsonwebtoken';
+import {HttpError} from 'http-errors';
 import {and, authorize, or, Rule, RuleResult} from '../../src/index';
 
 const jwtToken = jwt.sign(
@@ -38,24 +39,30 @@ describe('tests', () => {
 
     describe('authorize', () => {
         it('should throw 403 when rule does not pass', async () => {
+            expect.assertions(1);
+
             const rule1 = createRule('rule1', false);
 
             try {
                 await authorize(jwtToken, and([rule1()]));
-                fail();
             } catch (e) {
-                expect(e.status).toBe(403);
+                if (e instanceof HttpError) {
+                    expect(e.status).toBe(403);
+                }
             }
         });
 
         it('should throw 403 when token in invalid ', async () => {
+            expect.assertions(1);
+
             const rule1 = createRule('rule1', false);
 
             try {
                 await authorize('stam', and([rule1()]));
-                fail();
             } catch (e) {
-                expect(e.status).toBe(403);
+                if (e instanceof HttpError) {
+                    expect(e.status).toBe(403);
+                }
             }
         });        
     });    
