@@ -4,8 +4,8 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc --build --clean",
-    "prepublish": "yarn build",
+    "build": "rm -rf dist && tsc",
+    "prepublish": "npm run build",
     "test": "jest --config=tests/jest.config.unit.js"
   },
   "repository": {
@@ -17,9 +17,7 @@
     "url": "https://github.com/Soluto/authorized-rules/issues"
   },
   "files": [
-    "dist/*.js",
-    "dist/*.ts",
-    "dist/*.map"
+    "dist"
   ],
   "dependencies": {
     "@types/jwt-decode": "^3.1.0",
